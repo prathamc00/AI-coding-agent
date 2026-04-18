@@ -1,0 +1,12 @@
+# Root
+.env
+.venv/
+backend_data/
+
+# Python
+backend/__pycache__/
+backend/.pytest_cache/
+
+# Node
+frontend/node_modules/
+frontend/.next/
