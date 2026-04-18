@@ -31,13 +31,36 @@ Production-ready local AI Coding Agent inspired by Cursor/Claude Code lite.
 
 ### 1. Environment
 
-Copy `.env.example` to `.env` and fill at least:
+Copy `.env.example` to `.env` and configure one of the following:
 
-- `OPENAI_API_KEY=your_key`
+**Option A: OpenAI API (Cloud)**
+- `OPENAI_API_KEY=your_key` (required)
+- `OPENAI_MODEL=gpt-4o-mini` (optional, defaults to gpt-4o-mini)
 
-Optional:
+**Option B: Ollama (Local)**
+- `OLLAMA_ENABLED=true`
+- `OLLAMA_BASE_URL=http://localhost:11434` (optional, defaults to localhost:11434)
+- `OLLAMA_MODEL=auto` (recommended, automatically picks the smallest installed model)
 
-- `OPENAI_MODEL=gpt-4o-mini`
+#### Ollama Setup
+1. **Install Ollama**: Download from [ollama.ai](https://ollama.ai)
+2. **Pull a model**: 
+   ```bash
+   ollama pull qwen3.5:4b
+   # or any smaller local model you want to use
+   ```
+3. **Start Ollama**: 
+   ```bash
+   ollama serve
+   ```
+   (Ollama runs on `http://localhost:11434` by default)
+4. **Set environment**: 
+   ```
+   OLLAMA_ENABLED=true
+   OLLAMA_MODEL=auto
+   ```
+
+Optional settings:
 - `DATABASE_URL=sqlite:///backend_data/app.db`
 - `COMMAND_TIMEOUT_SECONDS=120`
 - `NEXT_PUBLIC_API_URL=http://localhost:8000`

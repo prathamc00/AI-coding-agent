@@ -9,6 +9,7 @@ import RepoLoader from "@/components/repo-loader";
 import {
   ChatMessage,
   FileNode,
+  getHealth,
   ProposedChange,
   applyDiff,
   generateCode,
@@ -31,12 +32,25 @@ export default function HomePage() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [lastCommandLogs, setLastCommandLogs] = useState("");
   const [lastCommandLabel, setLastCommandLabel] = useState("");
+  const [backendLabel, setBackendLabel] = useState("Loading model...");
 
   useEffect(() => {
     const persisted = localStorage.getItem("repo_id");
     if (persisted) {
       setRepoId(persisted);
     }
+  }, []);
+
+  useEffect(() => {
+    getHealth()
+      .then((data) => {
+        const provider = data.provider ? data.provider.toUpperCase() : "LOCAL";
+        const model = data.model || data.configured_model || "unknown";
+        setBackendLabel(`${provider} · ${model}`);
+      })
+      .catch(() => {
+        setBackendLabel("Model unavailable");
+      });
   }, []);
 
   const refreshRepo = async (id: string) => {
@@ -115,6 +129,15 @@ export default function HomePage() {
 
   return (
     <main className="h-screen p-4">
+      <div className="mb-3 flex items-center justify-between rounded-xl border border-border bg-slate-950/70 px-4 py-2 text-xs text-slate-300">
+        <div className="flex items-center gap-2 uppercase tracking-wide text-slate-400">
+          <span className="inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+          Backend Status
+        </div>
+        <div className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 font-semibold text-cyan-100">
+          {backendLabel}
+        </div>
+      </div>
       <div className="grid h-full grid-cols-[290px_minmax(450px,1fr)_420px] gap-4">
         <aside className="flex h-full flex-col gap-3">
           <RepoLoader onLoaded={setRepoId} />

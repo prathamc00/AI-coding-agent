@@ -28,6 +28,17 @@ export type ChatMessage = {
   created_at?: string;
 };
 
+export type HealthResponse = {
+  status: string;
+  provider?: string;
+  model?: string;
+};
+
+export async function getHealth() {
+  const { data } = await api.get<HealthResponse>("/health");
+  return data;
+}
+
 export async function uploadRepo(params: { files?: File[]; localPath?: string }) {
   const formData = new FormData();
   params.files?.forEach((file) => {

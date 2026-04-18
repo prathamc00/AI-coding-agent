@@ -58,14 +58,24 @@ def chat_with_repo(payload: ChatRequest, db: Session = Depends(get_db)):
     context = search_code(repo, payload.message, limit=8)
 
     if llm_service.available:
-        context_text = "\n\n".join([f"File: {r.path}\nSnippet:\n{r.snippet}" for r in context])
-        answer = llm_service.complete_text(
-            system_prompt=(
-                "You are a precise senior software engineer answering questions about a repository. "
-                "If uncertain, say what to inspect next."
-            ),
-            user_prompt=f"Question: {payload.message}\n\nContext:\n{context_text}",
-        )
+        try:
+            context_text = "\n\n".join([f"File: {r.path}\nSnippet:\n{r.snippet}" for r in context])
+            answer = llm_service.complete_text(
+                system_prompt=(
+                    "You are a precise senior software engineer answering questions about a repository. "
+                    "If uncertain, say what to inspect next."
+                ),
+                user_prompt=f"Question: {payload.message}\n\nContext:\n{context_text}",
+            )
+        except Exception:
+            if not context:
+                answer = "No relevant files were found for that question. Local model is currently unavailable."
+            else:
+                bullets = "\n".join([f"- {c.path}" for c in context])
+                answer = (
+                    "Local model is currently unavailable, so here are the most relevant files to inspect:\n"
+                    f"{bullets}"
+                )
     else:
         if not context:
             answer = "No relevant files were found for that question. Add OPENAI_API_KEY for richer analysis."

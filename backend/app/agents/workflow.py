@@ -13,13 +13,16 @@ from app.services.repo_service import collect_project_snapshot, read_file, searc
 class PlannerAgent:
     def run(self, task: str, error_fix_mode: bool = False) -> list[str]:
         if llm_service.available:
-            data = llm_service.complete_json(
-                "You are a senior engineering planner. Return JSON with key 'steps' as an array of concise steps.",
-                f"Task: {task}\nError fix mode: {error_fix_mode}",
-            )
-            steps = data.get("steps", [])
-            if isinstance(steps, list) and steps:
-                return [str(step) for step in steps]
+            try:
+                data = llm_service.complete_json(
+                    "You are a senior engineering planner. Return JSON with key 'steps' as an array of concise steps.",
+                    f"Task: {task}\nError fix mode: {error_fix_mode}",
+                )
+                steps = data.get("steps", [])
+                if isinstance(steps, list) and steps:
+                    return [str(step) for step in steps]
+            except Exception:
+                pass
         if error_fix_mode:
             return [
                 "Parse terminal errors and identify broken files",
@@ -88,7 +91,10 @@ class CodingAgent:
             "2) Keep code production-ready with no placeholders.\n"
             "3) If no changes are needed, return an empty array."
         )
-        data = llm_service.complete_json(system_prompt, user_prompt)
+        try:
+            data = llm_service.complete_json(system_prompt, user_prompt)
+        except Exception:
+            return []
         raw_changes = data.get("changes", [])
         proposed: list[ProposedChange] = []
 
@@ -125,18 +131,24 @@ class ReviewerAgent:
     def run(self, task: str, plan: list[str], changes: list[ProposedChange]) -> str:
         if not changes:
             if llm_service.available:
-                return llm_service.complete_text(
-                    "You are a strict code reviewer.",
-                    f"Task: {task}\nPlan: {plan}\nNo code changes were proposed. Give concise rationale and next actions.",
-                )
+                try:
+                    return llm_service.complete_text(
+                        "You are a strict code reviewer.",
+                        f"Task: {task}\nPlan: {plan}\nNo code changes were proposed. Give concise rationale and next actions.",
+                    )
+                except Exception:
+                    pass
             return "No code changes were proposed. Add OPENAI_API_KEY to enable AI-generated edits."
 
         summary = "\n\n".join([f"Path: {c.path}\nRationale: {c.rationale}\nDiff:\n{c.diff[:4000]}" for c in changes])
         if llm_service.available:
-            return llm_service.complete_text(
-                "You are a strict code reviewer focused on correctness, risk, and tests.",
-                f"Task: {task}\nPlan: {plan}\nProposed changes:\n{summary}\nGive concise review notes.",
-            )
+            try:
+                return llm_service.complete_text(
+                    "You are a strict code reviewer focused on correctness, risk, and tests.",
+                    f"Task: {task}\nPlan: {plan}\nProposed changes:\n{summary}\nGive concise review notes.",
+                )
+            except Exception:
+                pass
         return "Generated changes reviewed with local fallback mode. Validate by running build and tests."
 
 
